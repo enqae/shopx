@@ -1,92 +1,121 @@
 HOST: http://www.google.com/
 
---- shopx ---
+--- s-machine ---
 
 ---
-Welcome to the our sample API documentation. All comments can be written in (support [Markdown](http://daringfireball.net/projects/markdown/syntax) syntax)
+eCommerce API Platform 
+
+# Resources
+
+- Customer
+- Catalog
+- ShoppingCart
+- Order
+- Inventory
+- ...
+
+
+# Authentication 
+Managed through oAuth2.0
+
+# Versioning
+Versions will be specified in the form:
+
+- **/v1/resource** from version 1 
+- **/v2/resource** from version 2 
+- and so on
+
+
+# HTTP Codes and Errors
+The HTTP codes used are the following:
+
+- __200__ OK.
+- __201__ New resource created.
+- __400__ Bad Request. The content of the request, the headers, or any other thing is not according to the s-machine specification.
+- __401__ Unauthorized. Authentication is required.
+- __403__ Forbidden. Authentication was successful but still additional permissions are needed to access the resource.
+- __404__ Not Found. The requested resource is not available in s-machine.
+- __409__ Conflict. The resource requested for modification was updated before the current attempt.
+- __410__ Gone. The resource was removed or is no longer available.
+- __500__ Internal Server Error.
+
+### Error Message Properties
+The notification of an error goes always with an attached message in the response body.
+The properties of this message are the following:
+
+- **http_code** the HTTP code associted with this error
+- __error_code__ the error code given by the s-machine
+- __message__ the description of the error
+- **more_info** a link to further information about the error
+
+There can be more than one error in a response. All error will go encapsulated in an **errors** list.
+i.e.: see in **/customers** the response for the error code **400**.
+
+
+
+
+# Special Parameters
+
+### **suppress_ error_codes** 
+
+When this paremeter is used the only HTTP response code sent by s-machine is 200. The response body will hold the information about the error. 
+
+i.e.: <code>http://s-machine.19drops.com/v1/customer?suppress_error_codes=true</code> 
+
+
+
+
 ---
 
 --
-Customer
-The following is a section of resources related to the customer
+Customer Resources
+
 --
 
-Register a new customer
-POST /customer
+Get all customers for a shop
+GET /customers
 > Content-Type: application/json
-{ "user": {"email": "email@me.com", "password":"thePassword", "password2":"thePassword", "referenced-by":"email-referer@zon.com"} }
-< 201
-< Content-Type: application/json; charset=utf-8
-{ "status": "created" }
+< 200
+< Content-Type: application/json
+{ 
+    "customers": 
+    [
+        {
+            "id" : 98987765,
+            "nickname": "jakeJones",
+            "firstName": "Jake",
+            "lastName": "Jones",
+            "email": "jjones@gmail.com",
+            "state": "A",
+            "createdAt": "2013-01-11T15:29:40-05:00"
+        },
+        {
+            "id" : 98989765,
+            "nickname": "melissa",
+            "firstName": "Melissa",
+            "lastName": "Raitt",
+            "email": "mraitt@gmail.com",
+            "state": "N",
+            "createdAt": "2013-01-11T15:59:40-05:00"
+        }
+    ]
+}
 +++++
 < 400
-< Content-Type: application/json; charset=utf-8
-{ "error": [
-        {"code":"ERRNO_0001", "message":"email already exist in shopx" }
-    ]
+< Content-Type: application/json
+{
+    "errors": 
+    {
+        "http_code":"400",    
+        "messages":
+        [
+            {
+            "error_code":"8900",
+            "message":"the Content-Type was not the required",
+            "more_info":"http://s-machine.19drops.com/docs/headers"
+         }
+        ]
+    }
 }
-+++++
-< 400
-< Content-Type: application/json; charset=utf-8
-{ "error": [
-        {"code":"ERRNO_0002", "message":"password and confirmation different" }
-    ]
-}
-+++++
-< 401
-< Content-Type: application/json; charset=utf-8
-{ "error": [
-        {"code":"ERRNO_0003", "message":"not authorized" }
-    ]
-}
-
-
-Register a new user with extended information
-POST /customer/{customer}/profile
-{ }
-< 201
-< Content-Type: application/json
-{}
-
-
-
-
-List products added into your shopping-cart. (comment block again in Markdown)
-GET /shopping-cart
-< 200
-< Content-Type: application/json
-{ "items": [
-{ "url": "/shopping-cart/1", "product":"2ZY48XPZ", "quantity": 1, "name": "New socks", "price": 1.25 }
-] }
-
-Save new products in your shopping cart
-POST /shopping-cart
-> Content-Type: application/json
-{ "product":"1AB23ORM", "quantity": 2 }
-< 201
-< Content-Type: application/json
-{ "status": "created", "url": "/shopping-cart/2" }
-
--- Payment Resources --
-
-This resource allows you to submit payment information to process your *shopping cart* items
-POST /payment
-{ "cc": "12345678900", "cvc": "123", "expiry": "0112" }
-< 200
-{ "receipt": "/payment/receipt/1" }
-
-
-List products added into your shopping-cart. (comment block again in Markdown)
-GET /sc
-< 200
-< Content-Type: application/json
-{ "items": [
-{ "url": "/shopping-cart/1", "product":"2ZY48XPZ", "quantity": 1, "name": "New socks", "price": 1.25 }
-] }
-
-
-
-
-
 
 
