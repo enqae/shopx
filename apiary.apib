@@ -3,7 +3,7 @@ HOST: http://www.google.com/
 --- s-machine ---
 
 ---
-eCommerce API Platform 
+eCommerce API Platform - 9
 
 # Resources
 
@@ -24,6 +24,10 @@ Versions will be specified in the form:
 - **/v1/resource** from version 1 
 - **/v2/resource** from version 2 
 - and so on
+
+# i18n
+
+s-machine will use the header _Accept-Language_ to resolve the language in which the response will be returned to the client.
 
 
 # HTTP Codes and Errors
@@ -65,6 +69,9 @@ i.e.: <code>http://s-machine.19drops.com/v1/customer?suppress_error_codes=true</
 
 
 
+# WebHooks
+
+
 ---
 
 --
@@ -72,11 +79,11 @@ Customer Resources
 
 --
 
-Get all customers for a shop
+Retrieves all customers in a s-machine environment
 GET /customers
 > Content-Type: application/json
 < 200
-< Content-Type: application/json
+< Content-Type: application/json;charset=UTF-8
 { 
     "customers": 
     [
@@ -102,7 +109,7 @@ GET /customers
 }
 +++++
 < 400
-< Content-Type: application/json
+< Content-Type: application/json;charset=UTF-8
 {
     "errors": 
     {
@@ -118,4 +125,338 @@ GET /customers
     }
 }
 
+Create a new customer in a s-machine environment. 
 
+The mandatory information to create a new customer is:
+
+- **nickname**
+- **firstName** 
+- **lastName** 
+- **email** 
+- **password**
+- **confirmation** of the password
+
+POST /customers
+> Content-Type: application/json
+{ 
+    "customer": 
+        {
+            "nickname": "jakeJones",
+            "firstName": "Jake",
+            "lastName": "Jones",
+            "email": "jjones@gmail.com",
+            "password": "mypasss",
+            "confirmation": "mypasss"
+        }
+}
+< 201
+< Content-Type: application/json;charset=UTF-8
+< Location: http://s-machine.apairy.io/customers/98987765
+{ 
+    "customer": 
+        {
+            "id" : 98987765,
+            "nickname": "jakeJones",
+            "firstName": "Jake",
+            "lastName": "Jones",
+            "email": "jjones@gmail.com",
+            "state": "A",
+            "createdAt": "2013-01-11T15:29:40-05:00"
+        }
+}
+
+Get info about a single customer
+GET /customers/{customer}
+> Content-Type: application/json
+< 200
+< Content-Type: application/json;charset=UTF-8
+{ 
+    "customer": 
+        {
+            "id" : 98987765,
+            "nickname": "jakeJones",
+            "firstName": "Jake",
+            "lastName": "Jones",
+            "email": "jjones@gmail.com",
+            "state": "A",
+            "createdAt": "2013-01-11T15:29:40-05:00"
+        }
+}
+
+Extended info about a single customer can be retrieved if the parameter _extended_ is used.
+The extended infromation can be:
+
+- addresses
+- address (only the main address)
+- stores
+
+GET /customers/{customer}?extended=address,stores
+> Content-Type: application/json
+< 200
+< Content-Type: application/json;charset=UTF-8
+{ 
+    "customer": 
+        {
+            "id" : 98987765,
+            "nickname": "jakeJones",
+            "firstName": "Jake",
+            "lastName": "Jones",
+            "email": "jjones@gmail.com",
+            "state": "A",
+            "createdAt": "2013-01-11T15:29:40-05:00"
+        },
+    "address":
+        {
+            "id" : 768767898,
+            "name": "MyMainAddress",
+            "countryCode": "US",
+            "provinceCode": "AL",
+            "cityCode": "2345",
+            "country": "USA",
+            "province": "Alabama",
+            "city": "Huntsville",
+            "zip": "78986",
+            "address1": "Market Street, 89",
+            "address2": null,
+            "phone": "555-555-555",
+            "main": true
+        }
+}
+
+Modifies info about a single customer. Only the fields with changes can be specified.
+POST /customers/{customer}
+> Content-Type: application/json
+{ 
+    "customer": 
+        {
+            "nickname": "jakeJones",
+            "firstName": "Jake",
+            "lastName": "Jones",
+            "email": "jjones@gmail.com",
+        }
+}
+< 200
+< Content-Type: application/json;charset=UTF-8
+{ 
+    "customer": 
+        {
+            "id" : 98987765,
+            "nickname": "jakeJones",
+            "firstName": "Jake",
+            "lastName": "Jones",
+            "email": "jjones@gmail.com",
+            "state": "A",
+            "modifiedAt": "2013-01-11T15:29:40-05:00"
+        }
+}
+
+Delete a single customer. The customer will not be deleted but deactivated and anonymized after a time.
+DELETE /customers/{customer}
+> Content-Type: application/json
+< 200
+< Content-Type: application/json;charset=UTF-8
+{ 
+    "customer": 
+        {
+            "id" : 98987765,
+            "state": "DA",
+            "deactivatedAt": "2013-01-11T15:29:40-05:00"
+        }
+}
+
+Anonymized a single customer. The identity of the customer (id, firstName, lastName...) will be removed form the system, but his activity will remain.  
+DELETE /customers/{customer}?force_anonymization=true
+> Content-Type: application/json
+< 200
+< Content-Type: application/json;charset=UTF-8
+{ 
+    "customer": 
+        {
+            "id" : 98987765,
+            "state": "AN",
+            "anonymizedAt": "2013-01-11T15:29:40-05:00"
+        }
+}
+
+Retrieves all the addresses of the customer. The _main_ address come the first one.
+GET /customers/{customer}/addresses
+> Content-Type: application/json
+> Accept-Language: en_US,en;q=0.8
+< 200
+< Content-Type: application/json;charset=UTF-8
+{ 
+    "addresses":
+    [
+        {
+            "id" : 768767898,
+            "name": "MyMainAddress",
+            "countryCode": "US",
+            "provinceCode": "AL",
+            "cityCode": "2345",
+            "country": "USA",
+            "province": "Alabama",
+            "city": "Huntsville",
+            "zip": "78986",
+            "address1": "Market Street, 89",
+            "address2": null,
+            "phone": "555-555-555",
+            "main": true
+        },
+        {
+            "id" : 768797898,
+            "name": "Other Address",
+            "countryCode": "US",
+            "provinceCode": "NY",
+            "cityCode": "212",
+            "country": "USA",
+            "province": "New York",
+            "city": "Albany",
+            "zip": "78987",
+            "address1": "Main Street, 8",
+            "address2": null,
+            "phone": "555-555-555",
+            "main": false
+        }        
+    ]
+}
+
+Retrieves a specific address for the customer
+GET /customers/{customer}/addresses/{address}
+> Content-Type: application/json
+> Accept-Language: en_US,en;q=0.8
+< 200
+< Content-Type: application/json;charset=UTF-8
+{ 
+    "address":
+        {
+            "id" : 768767898,
+            "name": "MyMainAddress",
+            "countryCode": "US",
+            "provinceCode": "AL",
+            "cityCode": "2345",
+            "country": "USA",
+            "province": "Alabama",
+            "city": "Huntsville",
+            "zip": "78986",
+            "address1": "Market Street, 89",
+            "address2": null,
+            "phone": "555-555-555",
+            "main": true
+        }
+}
+
+Modifies a specific address for the customer. Only the fields wih changes can be specified.
+POST /customers/{customer}/addresses/{address}
+> Content-Type: application/json
+< 200
+< Content-Type: application/json;charset=UTF-8
+{ 
+    "address":
+        {
+            "name": "MyNewMainAddress",
+            "countryCode": "US",
+            "provinceCode": "AL",
+            "cityCode": "2345",
+            "country": "USA",
+            "address1": "Market Street, 89",
+            "address2": null,
+            "phone": "555-555-555",
+            "main": true
+        }
+}
+
+Deletes a specific address for the customer. 
+DELETE /customers/{customer}/addresses/{address}
+> Content-Type: application/json
+< 200
+< Content-Type: application/json;charset=UTF-8
+{ 
+    "address":
+        {
+            "id" : 768767898,
+            "deletedAt": "2013-01-11T15:29:40-05:00"
+        }
+}
+
+Retrieves all the stores that the customer joined. 
+GET /customers/{customer}/stores
+> Content-Type: application/json
+< 200
+< Content-Type: application/json;charset=UTF-8
+{ 
+    "stores":
+    [
+        {
+            "id" : 768767898,
+            "name": "Cool Devices"
+        },
+        {
+            "id" : 768797898,
+            "name": "Planes & Ships"
+        }        
+    ]
+}
+
+The customer joins one or more stores.
+POST /customers/{customer}/stores
+> Content-Type: application/json
+{ 
+    "stores":
+    [
+        {
+            "id" : 768767898
+        },
+        {
+            "id" : 768797898
+        }        
+    ]
+}
+< 200
+< Content-Type: application/json;charset=UTF-8
+{ 
+    "stores":
+    [
+        {
+            "id" : 768767898,
+            "name": "Cool Devices",
+            "joinedAt": "2013-01-11T15:29:40-05:00"
+        },
+        {
+            "id" : 768797898,
+            "name": "Planes & Ships",
+            "joinedAt": "2013-01-11T15:29:40-05:00"
+        }        
+    ]
+}
+
+The customer de-joins one or more stores.
+DELETE /customers/{customer}/stores
+> Content-Type: application/json
+{ 
+    "stores":
+    [
+        {
+            "id" : 768767898
+        },
+        {
+            "id" : 768797898
+        }        
+    ]
+}
+< 200
+< Content-Type: application/json;charset=UTF-8
+{ 
+    "stores":
+    [
+        {
+            "id" : 768767898,
+            "name": "Cool Devices",
+            "dejoinedAt": "2013-01-11T15:29:40-05:00"
+        },
+        {
+            "id" : 768797898,
+            "name": "Planes & Ships",
+            "dejoinedAt": "2013-01-11T15:29:40-05:00"
+        }        
+    ]
+}
